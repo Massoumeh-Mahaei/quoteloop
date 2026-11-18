@@ -25,6 +25,59 @@ flowchart LR
 | Quote | job_id, amount_cents (bigint), currency (default `CAD`), valid_until, status, `revision_of` (nullable quote_id) |
 | Follow-up | quote_id, due_date, note, status (`open` / `done` / `cancelled`) |
 
+
+## Database schema
+
+```mermaid
+erDiagram
+    CLIENTS ||--o{ JOBS : has
+    JOBS ||--o{ QUOTES : has
+    QUOTES ||--o{ FOLLOW_UPS : has
+    QUOTES o|--o{ QUOTES : "is revised by"
+
+    CLIENTS {
+        bigint id PK
+        text name
+        text phone "optional"
+        text email "optional"
+        text address "optional"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    JOBS {
+        bigint id PK
+        bigint client_id FK
+        text title
+        text description "optional"
+        text site_address "optional"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    QUOTES {
+        bigint id PK
+        bigint job_id FK
+        bigint revision_of FK "optional"
+        bigint amount_cents
+        char_3 currency
+        date valid_until
+        text status
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    FOLLOW_UPS {
+        bigint id PK
+        bigint quote_id FK
+        date due_date
+        text note "optional"
+        text status
+        timestamptz created_at
+        timestamptz updated_at
+    }
+```
+
 ## Rules
 
 1. **Active quote:** A quote is active if its status is `Draft` or `Sent`. A Job can have at most one active quote, enforced by a partial unique index on `job_id` where status is in (`Draft`, `Sent`).
